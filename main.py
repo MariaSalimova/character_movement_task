@@ -107,11 +107,13 @@ class Player(pygame.sprite.Sprite):
             tile_width * pos_x + 15, tile_height * pos_y + 5)
 
     def move(self, x, y):
+        camera.dx -= tile_width * (x - self.pos[0])
+        camera.dy -= tile_height * (y - self.pos[1])
+        level_map[self.pos[1]][self.pos[0]] = "."
         self.pos = (x, y)
-
-        self.rect = self.image.get_rect().move(
-            tile_width * x + 15, tile_height * y + 5)
-
+        level_map[self.pos[1]][self.pos[0]] = "@"
+        for sprite in tiles_group:
+            camera.apply(sprite)
 
 class Camera:
     # зададим начальный сдвиг камеры
@@ -126,8 +128,8 @@ class Camera:
 
     # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
-        self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+        self.dx = 0
+        self.dy = 0
 
 
 def move(player, movement):
@@ -158,9 +160,11 @@ player_image = load_image('mario.png')
 tile_width = tile_height = 50
 running = True
 fps = 50
+level_map = load_level('map.txt')
 camera = Camera()
 start_screen()
 
+camera.update(player)
 player, level_x, level_y = generate_level(load_level('map.txt'))
 while running:
     screen.fill(pygame.Color('black'))
@@ -181,6 +185,7 @@ while running:
                 move(player, "left")
             elif event.key == pygame.K_d:
                 move(player, "right")
+    camera.update(player)
     tiles_group.draw(screen)
     player_group.draw(screen)
     pygame.display.flip()
